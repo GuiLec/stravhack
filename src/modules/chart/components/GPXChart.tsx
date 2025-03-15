@@ -1,7 +1,7 @@
 import { CustomTooltip } from "@/modules/chart/components/CustomTooltip";
 import { ChartPoint } from "@/modules/chart/interface";
 import {
-  LineChart,
+  ComposedChart,
   Line,
   XAxis,
   YAxis,
@@ -9,6 +9,7 @@ import {
   Brush,
   CartesianGrid,
   Legend,
+  Area,
 } from "recharts";
 
 interface GPXChartProps {
@@ -26,7 +27,7 @@ export const GPXChart = ({
   handleBrushChange,
 }: GPXChartProps) => {
   return (
-    <LineChart width={800} height={400} data={chartData}>
+    <ComposedChart width={800} height={400} data={chartData}>
       <CartesianGrid strokeDasharray="3 3" />
       <XAxis
         dataKey={xAxisMode === "time" ? "time" : "cumulativeDistance"}
@@ -39,7 +40,7 @@ export const GPXChart = ({
       <YAxis
         yAxisId="left"
         label={{
-          value: "HR / Altitude",
+          value: "HR",
           angle: -90,
           position: "insideLeft",
         }}
@@ -67,12 +68,13 @@ export const GPXChart = ({
         stroke="#387908"
         dot={false}
       />
-      <Line
+      <Area
         yAxisId="left"
         type="monotone"
         dataKey="ele"
         name="Altitude"
-        stroke="#8884d8"
+        stroke="none"
+        fill="rgba(211,211,211,0.5)"
         dot={false}
       />
       <Brush
@@ -81,6 +83,6 @@ export const GPXChart = ({
         stroke="#8884d8"
         onChange={handleBrushChange}
       />
-    </LineChart>
+    </ComposedChart>
   );
 };
