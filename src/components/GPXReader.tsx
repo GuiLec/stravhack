@@ -54,6 +54,7 @@ export const GPXReader = () => {
     event: React.ChangeEvent<HTMLInputElement>
   ): void => {
     const file = event.target.files?.[0];
+    setSelectedRange(null);
     if (file && file.name.endsWith(".gpx")) {
       const reader = new FileReader();
       reader.onload = (e: ProgressEvent<FileReader>): void => {
@@ -118,8 +119,8 @@ export const GPXReader = () => {
     });
   };
 
-  const incrementSpeed = () => adjustSpeed(1.1);
-  const decrementSpeed = () => adjustSpeed(0.9);
+  const incrementSpeed = () => adjustSpeed(1.05);
+  const decrementSpeed = () => adjustSpeed(0.95);
 
   const updateHR = (delta: number) => {
     if (!selectedRange) return;
