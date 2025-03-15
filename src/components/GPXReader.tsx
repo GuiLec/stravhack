@@ -22,7 +22,6 @@ export const GPXReader = () => {
   );
   const [originalGPX, setOriginalGPX] = useState<string | null>(null);
 
-  // When originalGPX changes, update chart data and stats.
   useEffect(() => {
     if (originalGPX) {
       const parsed = parseGPX(originalGPX);
@@ -66,7 +65,6 @@ export const GPXReader = () => {
     }
   };
 
-  // Helper: Parse the current GPX XML, perform an update, and save back.
   const updateGPX = (updateFn: (xmlDoc: Document) => void) => {
     if (!originalGPX) return;
     const parser = new DOMParser();
@@ -77,8 +75,6 @@ export const GPXReader = () => {
     setOriginalGPX(newGPX);
   };
 
-  // Adjust speed by compressing (alpha > 1) or expanding (alpha < 1) the duration
-  // in the selected range. The first and last times remain fixed.
   const adjustSpeed = (alpha: number) => {
     if (!selectedRange) {
       alert("No range selected.");
@@ -99,11 +95,9 @@ export const GPXReader = () => {
       const T0 = times[startIndex].getTime();
       const T1 = times[endIndex].getTime();
       const origDuration = T1 - T0;
-      // New duration is compressed/expanded by factor alpha.
       const newDuration = origDuration / alpha;
-      const diff = newDuration - origDuration; // negative for compression
+      const diff = newDuration - origDuration;
       let currentTime = T0;
-      // Update selected range timestamps (linearly interpolated)
       trkpts[startIndex].getElementsByTagName("time")[0].textContent = new Date(
         currentTime
       ).toISOString();
@@ -115,7 +109,6 @@ export const GPXReader = () => {
         currentTime += newInterval;
         nextTimeEl.textContent = new Date(currentTime).toISOString();
       }
-      // Shift all points after the selected range to avoid gaps.
       for (let i = endIndex + 1; i < trkpts.length; i++) {
         const timeEl = trkpts[i].getElementsByTagName("time")[0];
         const newTime = new Date(times[i].getTime() + diff);
@@ -127,7 +120,6 @@ export const GPXReader = () => {
   const incrementSpeed = () => adjustSpeed(1.1);
   const decrementSpeed = () => adjustSpeed(0.9);
 
-  // Update HR in the selected range.
   const updateHR = (delta: number) => {
     if (!selectedRange) return;
     const { startIndex, endIndex } = selectedRange;
@@ -171,9 +163,165 @@ export const GPXReader = () => {
     }
   };
 
+  const resampleGPX = (xmlString: string): string => {
+    const parser = new DOMParser();
+    const xmlDoc = parser.parseFromString(xmlString, "application/xml");
+    const trkpts = xmlDoc.getElementsByTagName("trkpt");
+    if (trkpts.length === 0) return xmlString;
+
+    const points: Array<{
+      lat: number;
+      lon: number;
+      ele: number | null;
+      time: Date;
+      hr: number | null;
+      cad: number | null;
+      atemp: number | null;
+    }> = [];
+
+    for (let i = 0; i < trkpts.length; i++) {
+      const trkpt = trkpts[i];
+      const lat = parseFloat(trkpt.getAttribute("lat")!);
+      const lon = parseFloat(trkpt.getAttribute("lon")!);
+      const eleEl = trkpt.getElementsByTagName("ele")[0];
+      const ele = eleEl ? parseFloat(eleEl.textContent!) : null;
+      const timeEl = trkpt.getElementsByTagName("time")[0];
+      const time = timeEl ? new Date(timeEl.textContent!) : new Date(0);
+
+      let hr: number | null = null;
+      let cad: number | null = null;
+      let atemp: number | null = null;
+      const ext = trkpt.getElementsByTagName("ns3:TrackPointExtension")[0];
+      if (ext) {
+        const hrEl = ext.getElementsByTagName("ns3:hr")[0];
+        const cadEl = ext.getElementsByTagName("ns3:cad")[0];
+        const atempEl = ext.getElementsByTagName("ns3:atemp")[0];
+        hr = hrEl ? parseInt(hrEl.textContent!, 10) : null;
+        cad = cadEl ? parseInt(cadEl.textContent!, 10) : null;
+        atemp = atempEl ? parseFloat(atempEl.textContent!) : null;
+      }
+
+      points.push({ lat, lon, ele, time, hr, cad, atemp });
+    }
+
+    if (!points.length || !points[0].time) return xmlString;
+
+    const startTime = points[0].time.getTime();
+    const endTime = points[points.length - 1].time.getTime();
+    const newTimes: Date[] = [];
+    for (let t = startTime; t <= endTime; t += 1000) {
+      newTimes.push(new Date(t));
+    }
+
+    const newPoints: typeof points = [];
+    let originalIndex = 0;
+    for (const newTime of newTimes) {
+      const newTimeMs = newTime.getTime();
+      while (
+        originalIndex < points.length - 1 &&
+        points[originalIndex + 1].time.getTime() <= newTimeMs
+      ) {
+        originalIndex++;
+      }
+
+      const prevPoint = points[originalIndex];
+      const nextPoint =
+        originalIndex < points.length - 1
+          ? points[originalIndex + 1]
+          : prevPoint;
+
+      if (newTimeMs === prevPoint.time.getTime()) {
+        newPoints.push(prevPoint);
+        continue;
+      }
+
+      const prevTime = prevPoint.time.getTime();
+      const nextTime = nextPoint.time.getTime();
+      const interval = nextTime - prevTime;
+      const factor = interval > 0 ? (newTimeMs - prevTime) / interval : 0;
+
+      const interpolate = (
+        a: number | null,
+        b: number | null
+      ): number | null => {
+        if (a === null || b === null)
+          return a !== null ? a : b !== null ? b : null;
+        return a + (b - a) * factor;
+      };
+
+      const interpolated = {
+        lat: interpolate(prevPoint.lat, nextPoint.lat) || 0,
+        lon: interpolate(prevPoint.lon, nextPoint.lon) || 0,
+        ele: interpolate(prevPoint.ele, nextPoint.ele),
+        time: newTime,
+        hr: interpolate(prevPoint.hr, nextPoint.hr),
+        cad: interpolate(prevPoint.cad, nextPoint.cad),
+        atemp: interpolate(prevPoint.atemp, nextPoint.atemp),
+      };
+
+      newPoints.push(interpolated);
+    }
+
+    const gpx = xmlDoc.documentElement;
+    const trk = gpx.getElementsByTagName("trk")[0];
+    const trkseg = trk.getElementsByTagName("trkseg")[0];
+    while (trkseg.firstChild) {
+      trkseg.removeChild(trkseg.firstChild);
+    }
+
+    for (const point of newPoints) {
+      const trkpt = xmlDoc.createElement("trkpt");
+      trkpt.setAttribute("lat", point.lat.toFixed(12));
+      trkpt.setAttribute("lon", point.lon.toFixed(12));
+
+      if (point.ele !== null) {
+        const ele = xmlDoc.createElement("ele");
+        ele.textContent = point.ele!.toFixed(6);
+        trkpt.appendChild(ele);
+      }
+
+      const time = xmlDoc.createElement("time");
+      const isoTime = point.time.toISOString().replace(/\.\d+Z$/, ".000Z");
+      time.textContent = isoTime;
+      trkpt.appendChild(time);
+
+      if (point.hr !== null || point.cad !== null || point.atemp !== null) {
+        const extensions = xmlDoc.createElement("extensions");
+        const trackExt = xmlDoc.createElement("ns3:TrackPointExtension");
+
+        if (point.atemp !== null) {
+          const atemp = xmlDoc.createElement("ns3:atemp");
+          atemp.textContent = point.atemp.toFixed(1);
+          trackExt.appendChild(atemp);
+        }
+
+        if (point.hr !== null) {
+          const hr = xmlDoc.createElement("ns3:hr");
+          hr.textContent = Math.round(point.hr).toString();
+          trackExt.appendChild(hr);
+        }
+
+        if (point.cad !== null) {
+          const cad = xmlDoc.createElement("ns3:cad");
+          cad.textContent = Math.round(point.cad).toString();
+          trackExt.appendChild(cad);
+        }
+
+        extensions.appendChild(trackExt);
+        trkpt.appendChild(extensions);
+      }
+
+      trkseg.appendChild(trkpt);
+    }
+
+    const serializer = new XMLSerializer();
+    return serializer.serializeToString(xmlDoc);
+  };
+
   const downloadGPX = () => {
     if (!originalGPX) return;
-    const blob = new Blob([originalGPX], { type: "application/gpx+xml" });
+    const resampledXML = resampleGPX(originalGPX);
+    const blob = new Blob([resampledXML], { type: "application/gpx+xml" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
