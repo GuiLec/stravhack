@@ -19,12 +19,16 @@ interface GPXChartProps {
     startIndex?: number;
     endIndex?: number;
   }) => void;
+  brushStartIndex?: number;
+  brushEndIndex?: number;
 }
 
 export const GPXChart = ({
   chartData,
   xAxisMode,
   handleBrushChange,
+  brushStartIndex,
+  brushEndIndex,
 }: GPXChartProps) => {
   return (
     <ComposedChart width={800} height={400} data={chartData}>
@@ -82,6 +86,8 @@ export const GPXChart = ({
         height={30}
         stroke="#8884d8"
         onChange={handleBrushChange}
+        startIndex={brushStartIndex}
+        endIndex={brushEndIndex}
       />
     </ComposedChart>
   );
