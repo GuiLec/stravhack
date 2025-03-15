@@ -4,15 +4,9 @@ import { ChartPoint } from "@/modules/chart/interface";
 import { parseGPX } from "@/modules/gpx/utils/parseGPX";
 import { processPoints } from "@/modules/gpx/utils/processPoints";
 import { StatsSection } from "@/modules/stats/components/Stats";
+import { Stats } from "@/modules/stats/interface";
 import { computeStats } from "@/modules/stats/utils/computeStats";
 import React, { useState } from "react";
-
-interface Stats {
-  duration: number; // en secondes
-  distance: number; // en km
-  avgHR: number;
-  avgSpeed: number;
-}
 
 export const GPXReader = () => {
   const [chartData, setChartData] = useState<ChartPoint[]>([]);
