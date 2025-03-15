@@ -1,0 +1,86 @@
+import { CustomTooltip } from "@/modules/chart/components/CustomTooltip";
+import { ChartPoint } from "@/modules/chart/interface";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  Brush,
+  CartesianGrid,
+  Legend,
+} from "recharts";
+
+interface GPXChartProps {
+  chartData: ChartPoint[];
+  xAxisMode: string;
+  handleBrushChange: (brush: {
+    startIndex?: number;
+    endIndex?: number;
+  }) => void;
+}
+
+export const GPXChart = ({
+  chartData,
+  xAxisMode,
+  handleBrushChange,
+}: GPXChartProps) => {
+  return (
+    <LineChart width={800} height={400} data={chartData}>
+      <CartesianGrid strokeDasharray="3 3" />
+      <XAxis
+        dataKey={xAxisMode === "time" ? "time" : "cumulativeDistance"}
+        tickFormatter={(value) =>
+          xAxisMode === "time"
+            ? new Date(value).toLocaleTimeString()
+            : value.toFixed(2)
+        }
+      />
+      <YAxis
+        yAxisId="left"
+        label={{
+          value: "HR / Altitude",
+          angle: -90,
+          position: "insideLeft",
+        }}
+      />
+      <YAxis
+        yAxisId="right"
+        orientation="right"
+        label={{ value: "Vitesse", angle: 90, position: "insideRight" }}
+      />
+      <Tooltip content={<CustomTooltip />} />
+      <Legend />
+      <Line
+        yAxisId="left"
+        type="monotone"
+        dataKey="hr"
+        name="HR"
+        stroke="#ff7300"
+        dot={false}
+      />
+      <Line
+        yAxisId="right"
+        type="monotone"
+        dataKey="speed"
+        name="Vitesse"
+        stroke="#387908"
+        dot={false}
+      />
+      <Line
+        yAxisId="left"
+        type="monotone"
+        dataKey="ele"
+        name="Altitude"
+        stroke="#8884d8"
+        dot={false}
+      />
+      <Brush
+        dataKey={xAxisMode === "time" ? "time" : "cumulativeDistance"}
+        height={30}
+        stroke="#8884d8"
+        onChange={handleBrushChange}
+      />
+    </LineChart>
+  );
+};
