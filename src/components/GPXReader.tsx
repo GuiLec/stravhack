@@ -3,6 +3,8 @@ import { GPXChart } from "@/modules/chart/components/GPXChart";
 import { ChartPoint } from "@/modules/chart/interface";
 import { parseGPX } from "@/modules/gpx/utils/parseGPX";
 import { processPoints } from "@/modules/gpx/utils/processPoints";
+import { StatsSection } from "@/modules/stats/components/Stats";
+import { computeStats } from "@/modules/stats/utils/computeStats";
 import React, { useState } from "react";
 
 interface Stats {
@@ -29,6 +31,7 @@ export const GPXReader = () => {
         const processedData = processPoints(parsedPoints);
         setChartData(processedData);
         console.log("Données traitées :", processedData);
+        setStats(computeStats(processedData));
       };
       reader.readAsText(file);
     } else {
@@ -47,22 +50,7 @@ export const GPXReader = () => {
     if (brush && brush.startIndex != null && brush.endIndex != null) {
       const selected = chartData.slice(brush.startIndex, brush.endIndex + 1);
       if (selected.length > 1) {
-        const startTime = new Date(selected[0].time!).getTime();
-        const endTime = new Date(selected[selected.length - 1].time!).getTime();
-        const duration = (endTime - startTime) / 1000; // en secondes
-        const distance =
-          selected[selected.length - 1].cumulativeDistance -
-          selected[0].cumulativeDistance;
-        const avgHR =
-          selected.reduce((sum, p) => sum + (p.hr || 0), 0) / selected.length;
-        const avgSpeed =
-          selected.reduce((sum, p) => sum + p.speed, 0) / selected.length;
-        setStats({
-          duration,
-          distance,
-          avgHR,
-          avgSpeed,
-        });
+        setStats(computeStats(selected));
       }
     }
   };
@@ -81,15 +69,7 @@ export const GPXReader = () => {
             xAxisMode={xAxisMode}
             handleBrushChange={handleBrushChange}
           />
-          {stats && (
-            <div style={{ marginTop: "20px" }}>
-              <h3>Statistiques de la sélection</h3>
-              <p>Durée : {stats.duration} secondes</p>
-              <p>Distance : {stats.distance.toFixed(2)} km</p>
-              <p>HR moyen : {stats.avgHR.toFixed(2)} bpm</p>
-              <p>Vitesse moyenne : {stats.avgSpeed.toFixed(2)} km/h</p>
-            </div>
-          )}
+          {stats && <StatsSection stats={stats} />}
         </>
       )}
     </div>
