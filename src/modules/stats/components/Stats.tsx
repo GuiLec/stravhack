@@ -5,9 +5,17 @@ interface Props {
   stats: Stats;
   decrementHR: () => void;
   incrementHR: () => void;
+  incrementSpeed: () => void;
+  decrementSpeed: () => void;
 }
 
-export const StatsSection = ({ stats, incrementHR, decrementHR }: Props) => (
+export const StatsSection = ({
+  stats,
+  incrementHR,
+  decrementHR,
+  incrementSpeed,
+  decrementSpeed,
+}: Props) => (
   <div style={{ marginTop: "20px" }}>
     <h3>Statistiques de la sélection</h3>
     <table
@@ -76,6 +84,7 @@ export const StatsSection = ({ stats, incrementHR, decrementHR }: Props) => (
                 height: "30px",
                 verticalAlign: "middle",
               }}
+              onClick={decrementSpeed}
             >
               -
             </button>
@@ -85,6 +94,7 @@ export const StatsSection = ({ stats, incrementHR, decrementHR }: Props) => (
                 height: "30px",
                 verticalAlign: "middle",
               }}
+              onClick={incrementSpeed}
             >
               +
             </button>
