@@ -1,6 +1,7 @@
 "use client";
 import { GPXChart } from "@/modules/chart/components/GPXChart";
 import { ChartPoint } from "@/modules/chart/interface";
+import { formatXML } from "@/modules/gpx/utils/formatXML";
 import { parseGPX } from "@/modules/gpx/utils/parseGPX";
 import { processPoints } from "@/modules/gpx/utils/processPoints";
 import { StatsSection } from "@/modules/stats/components/Stats";
@@ -315,7 +316,8 @@ export const GPXReader = () => {
     }
 
     const serializer = new XMLSerializer();
-    return serializer.serializeToString(xmlDoc);
+    const xml = serializer.serializeToString(xmlDoc);
+    return formatXML(xml);
   };
 
   const downloadGPX = () => {
