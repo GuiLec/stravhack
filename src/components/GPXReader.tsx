@@ -390,7 +390,11 @@ export const GPXReader = () => {
           />
           <div>
             <RadioGroup row value={xAxisMode} onChange={handleXAxisModeChange}>
-              <FormControlLabel value="time" control={<Radio />} label="Time" />
+              <FormControlLabel
+                value="time"
+                control={<Radio />}
+                label="Heure"
+              />
               <FormControlLabel
                 value="distance"
                 control={<Radio />}
@@ -407,7 +411,7 @@ export const GPXReader = () => {
           />
           <div style={{ marginTop: "10px" }}>
             <Button variant="contained" onClick={downloadGPX}>
-              Download Modified GPX
+              {"Télécharger le fichier GPX modifié"}
             </Button>
           </div>
         </>
