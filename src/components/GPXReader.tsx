@@ -7,6 +7,7 @@ import { processPoints } from "@/modules/gpx/utils/processPoints";
 import { StatsSection } from "@/modules/stats/components/Stats";
 import { Stats } from "@/modules/stats/interface";
 import { computeStats } from "@/modules/stats/utils/computeStats";
+import { FormControlLabel, Radio, RadioGroup } from "@mui/material";
 import React, { useState, useEffect } from "react";
 
 interface SelectedRange {
@@ -146,10 +147,6 @@ export const GPXReader = () => {
 
   const incrementHR = () => updateHR(1);
   const decrementHR = () => updateHR(-1);
-
-  const toggleXAxisMode = () => {
-    setXAxisMode(xAxisMode === "time" ? "distance" : "time");
-  };
 
   const handleBrushChange = (brush: {
     startIndex?: number;
@@ -333,15 +330,18 @@ export const GPXReader = () => {
     URL.revokeObjectURL(url);
   };
 
+  const handleXAxisModeChange = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    setXAxisMode(event.target.value as "time" | "distance");
+  };
+
   return (
     <div>
       <h2>Parse and Visualize GPX File</h2>
       <input type="file" accept=".gpx" onChange={handleFileChange} />
       {chartData.length > 0 && (
         <>
-          <button onClick={toggleXAxisMode}>
-            {`Switch to ${xAxisMode === "time" ? "distance" : "time"} axis`}
-          </button>
           <GPXChart
             chartData={chartData}
             xAxisMode={xAxisMode}
@@ -349,6 +349,16 @@ export const GPXReader = () => {
             brushStartIndex={selectedRange?.startIndex}
             brushEndIndex={selectedRange?.endIndex}
           />
+          <div>
+            <RadioGroup row value={xAxisMode} onChange={handleXAxisModeChange}>
+              <FormControlLabel value="time" control={<Radio />} label="Time" />
+              <FormControlLabel
+                value="distance"
+                control={<Radio />}
+                label="Distance"
+              />
+            </RadioGroup>
+          </div>
           <StatsSection
             decrementHR={decrementHR}
             incrementHR={incrementHR}
