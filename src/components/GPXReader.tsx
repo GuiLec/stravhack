@@ -61,6 +61,14 @@ export const GPXReader = () => {
     }
   }, [originalGPX]);
 
+  useEffect(() => {
+    if (chartData.length && selectedRange) {
+      const { startIndex, endIndex } = selectedRange;
+      const selectedData = chartData.slice(startIndex, endIndex + 1);
+      setStats(computeStats(selectedData));
+    }
+  }, [chartData, selectedRange]);
+
   const handleFileChange = (
     event: React.ChangeEvent<HTMLInputElement>
   ): void => {
