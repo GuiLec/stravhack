@@ -31,33 +31,35 @@ export const GPXReader = () => {
     null
   );
   const [originalGPX, setOriginalGPX] = useState<string | null>(null);
+  const [activityStartDate, setActivityStartDate] = useState<string>("");
 
   useEffect(() => {
-    if (originalGPX) {
-      const parsed = parseGPX(originalGPX);
-      const processed = processPoints(parsed);
-      setChartData(processed);
-      setStats(computeStats(processed));
-      setSelectedRange((prev) => {
-        if (!prev) {
-          return { startIndex: 0, endIndex: processed.length - 1 };
-        } else {
-          return {
+    if (!originalGPX) return;
+
+    // Use parseGPX to extract points
+    const parsedPoints = parseGPX(originalGPX);
+    const processedPoints = processPoints(parsedPoints);
+    setChartData(processedPoints);
+    setStats(computeStats(processedPoints));
+    setSelectedRange((prev) =>
+      !prev
+        ? { startIndex: 0, endIndex: processedPoints.length - 1 }
+        : {
             startIndex: prev.startIndex,
-            endIndex: Math.min(prev.endIndex, processed.length - 1),
-          };
-        }
-      });
+            endIndex: Math.min(prev.endIndex, processedPoints.length - 1),
+          }
+    );
+
+    // Set activity start date using the first point's time (if available)
+    if (parsedPoints.length > 0 && parsedPoints[0].time) {
+      const startDate = new Date(parsedPoints[0].time);
+      // Adjust to local time by subtracting the timezone offset
+      const localDate = new Date(
+        startDate.getTime() - startDate.getTimezoneOffset() * 60000
+      );
+      setActivityStartDate(localDate.toISOString().slice(0, 16));
     }
   }, [originalGPX]);
-
-  useEffect(() => {
-    if (chartData.length && selectedRange) {
-      const { startIndex, endIndex } = selectedRange;
-      const selectedData = chartData.slice(startIndex, endIndex + 1);
-      setStats(computeStats(selectedData));
-    }
-  }, [chartData, selectedRange]);
 
   const handleFileChange = (
     event: React.ChangeEvent<HTMLInputElement>
@@ -84,6 +86,58 @@ export const GPXReader = () => {
     const serializer = new XMLSerializer();
     const newGPX = serializer.serializeToString(xmlDoc);
     setOriginalGPX(newGPX);
+  };
+
+  // New function to update the activity's start date
+  const updateActivityStartDate = (newDate: Date) => {
+    if (!originalGPX) return;
+    updateGPX((xmlDoc) => {
+      // Determine the original start date from metadata or the first trkpt
+      let originalStart: Date | null = null;
+      const metadata = xmlDoc.getElementsByTagName("metadata")[0];
+      if (metadata) {
+        const timeEl = metadata.getElementsByTagName("time")[0];
+        if (timeEl && timeEl.textContent) {
+          originalStart = new Date(timeEl.textContent);
+        }
+      }
+      if (!originalStart) {
+        const firstTrkpt = xmlDoc.getElementsByTagName("trkpt")[0];
+        if (firstTrkpt) {
+          const timeEl = firstTrkpt.getElementsByTagName("time")[0];
+          if (timeEl && timeEl.textContent) {
+            originalStart = new Date(timeEl.textContent);
+          }
+        }
+      }
+      if (!originalStart) {
+        alert("Unable to determine the original start date.");
+        return;
+      }
+      // Calculate the time difference (in milliseconds)
+      const diff = newDate.getTime() - originalStart.getTime();
+
+      // Update metadata if it exists
+      if (metadata) {
+        let timeEl = metadata.getElementsByTagName("time")[0];
+        if (!timeEl) {
+          timeEl = xmlDoc.createElement("time");
+          metadata.appendChild(timeEl);
+        }
+        timeEl.textContent = newDate.toISOString();
+      }
+
+      // Update all trkpt times by offsetting with the difference
+      const trkpts = xmlDoc.getElementsByTagName("trkpt");
+      for (let i = 0; i < trkpts.length; i++) {
+        const timeEl = trkpts[i].getElementsByTagName("time")[0];
+        if (timeEl && timeEl.textContent) {
+          const origTime = new Date(timeEl.textContent);
+          const updatedTime = new Date(origTime.getTime() + diff);
+          timeEl.textContent = updatedTime.toISOString();
+        }
+      }
+    });
   };
 
   const adjustSpeed = (alpha: number) => {
@@ -379,6 +433,23 @@ export const GPXReader = () => {
           </Button>
         </label>
       </Box>
+      {originalGPX && (
+        <Box padding={3} display="flex" alignItems="center" gap={2}>
+          <Typography variant="body1">{"Début de l'activité:"}</Typography>
+          <input
+            type="datetime-local"
+            value={activityStartDate}
+            onChange={(e) => setActivityStartDate(e.target.value)}
+          />
+          <Button
+            variant="outlined"
+            disabled={!activityStartDate}
+            onClick={() => updateActivityStartDate(new Date(activityStartDate))}
+          >
+            {" Mettre à jour la date"}
+          </Button>
+        </Box>
+      )}
       <Box sx={{ height: "20px" }} />
       {chartData.length > 0 && (
         <>
