@@ -88,7 +88,6 @@ export const GPXReader = () => {
     setOriginalGPX(newGPX);
   };
 
-  // New function to update the activity's start date
   const updateActivityStartDate = (newDate: Date) => {
     if (!originalGPX) return;
     updateGPX((xmlDoc) => {
@@ -433,23 +432,6 @@ export const GPXReader = () => {
           </Button>
         </label>
       </Box>
-      {originalGPX && (
-        <Box padding={3} display="flex" alignItems="center" gap={2}>
-          <Typography variant="body1">{"Début de l'activité:"}</Typography>
-          <input
-            type="datetime-local"
-            value={activityStartDate}
-            onChange={(e) => setActivityStartDate(e.target.value)}
-          />
-          <Button
-            variant="outlined"
-            disabled={!activityStartDate}
-            onClick={() => updateActivityStartDate(new Date(activityStartDate))}
-          >
-            {" Mettre à jour la date"}
-          </Button>
-        </Box>
-      )}
       <Box sx={{ height: "20px" }} />
       {chartData.length > 0 && (
         <>
@@ -486,6 +468,9 @@ export const GPXReader = () => {
             incrementSpeed={incrementSpeed}
             decrementSpeed={decrementSpeed}
             stats={stats!}
+            activityStartDate={activityStartDate}
+            setActivityStartDate={setActivityStartDate}
+            updateActivityStartDate={updateActivityStartDate}
           />
           <Box mt={5}>
             <Button variant="contained" onClick={downloadGPX}>
