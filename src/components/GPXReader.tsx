@@ -7,7 +7,15 @@ import { processPoints } from "@/modules/gpx/utils/processPoints";
 import { StatsSection } from "@/modules/stats/components/Stats";
 import { Stats } from "@/modules/stats/interface";
 import { computeStats } from "@/modules/stats/utils/computeStats";
-import { FormControlLabel, Radio, RadioGroup } from "@mui/material";
+import {
+  Box,
+  Button,
+  FormControlLabel,
+  Radio,
+  RadioGroup,
+  Typography,
+} from "@mui/material";
+import Image from "next/image";
 import React, { useState, useEffect } from "react";
 
 interface SelectedRange {
@@ -338,8 +346,39 @@ export const GPXReader = () => {
 
   return (
     <div>
-      <h2>Parse and Visualize GPX File</h2>
-      <input type="file" accept=".gpx" onChange={handleFileChange} />
+      <Image
+        src="/assets/stravhack_logo.png"
+        alt="Stravhack Logo"
+        width={200}
+        height={100}
+        layout="intrinsic"
+      />
+
+      <Typography
+        variant="h3"
+        component={"h1"}
+        color="primary"
+        fontWeight="bold"
+      >
+        {"Tu as faim de KOM mais tu n'as pas les jambes ?"}
+      </Typography>
+      <Typography variant="body1" fontWeight={"bold"}>
+        {"Alors donne un petit coup de boost à ta sortie !"}
+      </Typography>
+      <Box sx={{ height: "20px" }} />
+      <label htmlFor="upload-gpx-file">
+        <input
+          id="upload-gpx-file"
+          type="file"
+          accept=".gpx"
+          onChange={handleFileChange}
+          style={{ display: "none" }}
+        />
+        <Button variant="outlined" component="span">
+          Charge un fichier GPX
+        </Button>
+      </label>
+      <Box sx={{ height: "20px" }} />
       {chartData.length > 0 && (
         <>
           <GPXChart
@@ -367,7 +406,9 @@ export const GPXReader = () => {
             stats={stats!}
           />
           <div style={{ marginTop: "10px" }}>
-            <button onClick={downloadGPX}>Download Modified GPX</button>
+            <Button variant="contained" onClick={downloadGPX}>
+              Download Modified GPX
+            </Button>
           </div>
         </>
       )}
