@@ -1,5 +1,6 @@
 import React from "react";
 import { Stats } from "@/modules/stats/interface";
+import { Typography } from "@mui/material";
 
 interface Props {
   stats: Stats;
@@ -17,10 +18,13 @@ export const StatsSection = ({
   decrementSpeed,
 }: Props) => (
   <div style={{ marginTop: "20px" }}>
-    <h3>Statistiques de la sélection</h3>
+    <Typography variant="h4" component="h2" fontWeight="bold" color="primary">
+      {"Joue à modifier ta sortie !"}
+    </Typography>
     <table
       style={{
         width: "100%",
+        maxWidth: "800px",
         borderCollapse: "collapse",
         tableLayout: "fixed",
       }}

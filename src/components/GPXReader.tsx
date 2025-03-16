@@ -362,46 +362,53 @@ export const GPXReader = () => {
       >
         {"Tu as faim de KOM mais tu n'as pas les jambes ?"}
       </Typography>
-      <Typography variant="body1" fontWeight={"bold"}>
+      <Typography mt={2} variant="body1" fontWeight={"bold"}>
         {"Alors donne un petit coup de boost à ta sortie !"}
       </Typography>
-      <Box sx={{ height: "20px" }} />
-      <label htmlFor="upload-gpx-file">
-        <input
-          id="upload-gpx-file"
-          type="file"
-          accept=".gpx"
-          onChange={handleFileChange}
-          style={{ display: "none" }}
-        />
-        <Button variant="outlined" component="span">
-          Charge un fichier GPX
-        </Button>
-      </label>
+      <Box padding={3}>
+        <label htmlFor="upload-gpx-file">
+          <input
+            id="upload-gpx-file"
+            type="file"
+            accept=".gpx"
+            onChange={handleFileChange}
+            style={{ display: "none" }}
+          />
+          <Button variant="outlined" component="span">
+            {"Charge un fichier GPX"}
+          </Button>
+        </label>
+      </Box>
       <Box sx={{ height: "20px" }} />
       {chartData.length > 0 && (
         <>
-          <GPXChart
-            chartData={chartData}
-            xAxisMode={xAxisMode}
-            handleBrushChange={handleBrushChange}
-            brushStartIndex={selectedRange?.startIndex}
-            brushEndIndex={selectedRange?.endIndex}
-          />
-          <div>
-            <RadioGroup row value={xAxisMode} onChange={handleXAxisModeChange}>
-              <FormControlLabel
-                value="time"
-                control={<Radio />}
-                label="Heure"
+          <Box display="flex" flexDirection="column" alignItems="flex-start">
+            <Box display="flex" alignItems="center" flexDirection={"column"}>
+              <GPXChart
+                chartData={chartData}
+                xAxisMode={xAxisMode}
+                handleBrushChange={handleBrushChange}
+                brushStartIndex={selectedRange?.startIndex}
+                brushEndIndex={selectedRange?.endIndex}
               />
-              <FormControlLabel
-                value="distance"
-                control={<Radio />}
-                label="Distance"
-              />
-            </RadioGroup>
-          </div>
+              <RadioGroup
+                row
+                value={xAxisMode}
+                onChange={handleXAxisModeChange}
+              >
+                <FormControlLabel
+                  value="time"
+                  control={<Radio />}
+                  label="Heure"
+                />
+                <FormControlLabel
+                  value="distance"
+                  control={<Radio />}
+                  label="Distance"
+                />
+              </RadioGroup>
+            </Box>
+          </Box>
           <StatsSection
             decrementHR={decrementHR}
             incrementHR={incrementHR}
@@ -409,11 +416,11 @@ export const GPXReader = () => {
             decrementSpeed={decrementSpeed}
             stats={stats!}
           />
-          <div style={{ marginTop: "10px" }}>
+          <Box mt={5}>
             <Button variant="contained" onClick={downloadGPX}>
               {"Télécharger le fichier GPX modifié"}
             </Button>
-          </div>
+          </Box>
         </>
       )}
     </div>
