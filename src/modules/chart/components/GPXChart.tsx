@@ -31,7 +31,11 @@ export const GPXChart = ({
   brushEndIndex,
 }: GPXChartProps) => {
   return (
-    <ComposedChart width={800} height={400} data={chartData}>
+    <ComposedChart
+      width={window.innerWidth < 768 ? 400 : 800}
+      height={400}
+      data={chartData}
+    >
       <CartesianGrid strokeDasharray="3 3" />
       <XAxis
         dataKey={xAxisMode === "time" ? "time" : "cumulativeDistance"}
